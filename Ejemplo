@@ -1,0 +1,69 @@
+# %% [markdown]
+# ### PRIMER PASO CONSULTAR A LA API DIRECTO DESDE PYTHON
+
+# %% [markdown]
+# Links a la API
+
+# %%
+#https://learn.microsoft.com/api/catalog/
+#https://learn.microsoft.com/api/catalog/?locale=es-es&type=modules
+
+# %% [markdown]
+# Instalacion de paquetes
+
+# %%
+#%pip install requests
+#%pip install --upgrade certifi
+#%pip install --upgrade pip
+#%pip install pip-system-certs  #realizar tambien en CMD
+#%pip install xlsxwriter
+
+# %% [markdown]
+# API Rquest y API a JSON
+
+# %%
+import requests
+import json
+import pandas as pd
+
+url = 'https://learn.microsoft.com/api/catalog/'
+
+response = requests.get(url)
+
+if response.status_code == 200:
+    data = response.json()
+    
+    with open('data.json', 'w') as f:
+        json.dump(data, f, indent=4)
+    
+else:
+    print(f"Error al realizar la solicitud: {response.status_code}")
+
+# %% [markdown]
+# ### SEGUNDO PASO: IDENTIFICAR LOS REGISTROS QUE ME INTERESAN
+
+# %% [markdown]
+# Creacion de Dataframe
+
+# %%
+with open('data.json', 'r', encoding='utf-8') as f:
+    data = json.load(f)
+
+keys = ['modules', 'units', 'certifications', 'exams']
+
+dfs = {key: pd.json_normalize(data[key]) for key in keys}
+
+# %% [markdown]
+# ### TERCER PASO: GUARDAR EL RESULTADO EN UN EXCEL
+
+# %% [markdown]
+# Guardar filtrado en formato xlsx
+
+# %%
+excel_file = 'output.xlsx'
+
+with pd.ExcelWriter(excel_file, engine='xlsxwriter') as writer:
+    for key, df in dfs.items():
+        df.to_excel(writer, sheet_name=key, index=False)
+
+
